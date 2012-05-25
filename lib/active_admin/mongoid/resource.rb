@@ -4,7 +4,11 @@ require 'inherited_resources'
 ActiveAdmin::Resource # autoload
 class ActiveAdmin::Resource
   def resource_table_name
-    resource.collection_name
+    if resource.ancestors.include?(ActiveRecord::Base)
+      resource.table_name
+    else
+      resource.collection_name
+    end
   end
 
   # Disable filters
@@ -16,12 +20,16 @@ ActiveAdmin::ResourceController # autoload
 class ActiveAdmin::ResourceController
   # Use #desc and #asc for sorting.
   def sort_order(chain)
-    params[:order] ||= active_admin_config.sort_order
-    table_name = active_admin_config.resource_table_name
-    if params[:order] && params[:order] =~ /^([\w\_\.]+)_(desc|asc)$/
-      chain.send($2, $1)
+    if active_admin_config.resource_class.ancestors.include?(ActiveRecord::Base)
+      super
     else
-      chain # just return the chain
+      params[:order] ||= active_admin_config.sort_order
+      table_name = active_admin_config.resource_table_name
+      if params[:order] && params[:order] =~ /^([\w\_\.]+)_(desc|asc)$/
+        chain.send($2, $1)
+      else
+        chain # just return the chain
+      end
     end
   end
 
