@@ -11,8 +11,10 @@ class ActiveAdmin::Resource
     end
   end
 
-  # Disable filters
   def add_default_sidebar_sections
+    if resource.ancestors.include?(ActiveRecord::Base)
+      super
+    end
   end
 end
 
@@ -33,8 +35,11 @@ class ActiveAdmin::ResourceController
     end
   end
 
-  # Disable filters
   def search(chain)
-    chain
+    if scoped_collection.ancestors.include?(ActiveRecord::Base)
+      super(chain)
+    else
+      chain
+    end
   end
 end
